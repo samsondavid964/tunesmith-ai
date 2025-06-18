@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,7 +10,9 @@ interface SpotifyAuthProps {
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || window.location.origin;
+// Ensure no trailing slash and use the current origin if not specified
+const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 
+  `${window.location.protocol}//${window.location.host}`;
 const SPOTIFY_SCOPES = [
   'playlist-modify-public',
   'playlist-modify-private',
@@ -83,6 +86,10 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
     setIsConnecting(true);
     setError(null);
     
+    // Debug: Log the redirect URI being used
+    console.log('Spotify Redirect URI:', SPOTIFY_REDIRECT_URI);
+    console.log('Current location:', window.location.href);
+    
     // Use Authorization Code Flow instead of Implicit Grant
     const authUrl =
       `https://accounts.spotify.com/authorize?` +
@@ -142,6 +149,13 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
               Missing VITE_SPOTIFY_CLIENT_ID environment variable
             </p>
           )}
+
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 bg-gray-800/50 p-3 rounded-lg">
+            <p>Debug Info:</p>
+            <p>Redirect URI: {SPOTIFY_REDIRECT_URI}</p>
+            <p>Current URL: {window.location.href}</p>
+          </div>
 
           <p className="text-xs text-gray-500">
             This will open Spotify's secure login page
