@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				spotify: {
+					green: '#1DB954',
+					black: '#191414',
+					white: '#FFFFFF',
+					gray: '#535353'
 				}
 			},
 			borderRadius: {
@@ -84,11 +91,34 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 20px rgba(29, 185, 84, 0.5)'
+					},
+					'50%': {
+						boxShadow: '0 0 40px rgba(29, 185, 84, 0.8)'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'float': 'float 3s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'music-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+				'spotify-gradient': 'linear-gradient(135deg, #1DB954 0%, #1ed760 100%)',
+				'dark-gradient': 'linear-gradient(135deg, #191414 0%, #2d1b3d 100%)'
 			}
 		}
 	},
