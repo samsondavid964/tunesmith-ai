@@ -1,6 +1,5 @@
 
-// Mock Spotify service for playlist creation
-// In a real implementation, this would use the Spotify Web API
+// Spotify service for playlist creation using Spotify Web API
 
 interface Track {
   id: string;
@@ -33,42 +32,95 @@ export const createSpotifyPlaylist = async (
   trackUris: string[]
 ): Promise<CreatePlaylistResponse> => {
   try {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Get user profile first
+    const userResponse = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
-    // Mock successful playlist creation
-    const mockPlaylistId = 'playlist_' + Date.now();
-    const mockPlaylistUrl = `https://open.spotify.com/playlist/${mockPlaylistId}`;
+    if (!userResponse.ok) {
+      throw new Error('Failed to get user profile');
+    }
 
-    console.log('Creating Spotify playlist:', {
+    const user = await userResponse.json();
+
+    // Create playlist
+    const playlistResponse = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: playlistName,
+        description: description,
+        public: false,
+      }),
+    });
+
+    if (!playlistResponse.ok) {
+      throw new Error('Failed to create playlist');
+    }
+
+    const playlist = await playlistResponse.json();
+
+    // Add tracks to playlist if any
+    if (trackUris.length > 0) {
+      const addTracksResponse = await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uris: trackUris,
+        }),
+      });
+
+      if (!addTracksResponse.ok) {
+        console.warn('Failed to add some tracks to playlist');
+      }
+    }
+
+    console.log('Successfully created Spotify playlist:', {
       name: playlistName,
       description,
       trackCount: trackUris.length,
-      accessToken: accessToken.substring(0, 10) + '...'
+      playlistId: playlist.id
     });
 
     return {
       success: true,
-      playlistId: mockPlaylistId,
-      playlistUrl: mockPlaylistUrl
+      playlistId: playlist.id,
+      playlistUrl: playlist.external_urls.spotify
     };
   } catch (error) {
     console.error('Failed to create Spotify playlist:', error);
     return {
       success: false,
-      error: 'Failed to create playlist. Please try again.'
+      error: error instanceof Error ? error.message : 'Failed to create playlist. Please try again.'
     };
   }
 };
 
 export const getUserProfile = async (accessToken: string) => {
-  // Mock user profile
-  return {
-    id: 'mock_user_123',
-    display_name: 'Music Lover',
-    email: 'user@example.com',
-    images: []
-  };
+  try {
+    const response = await fetch('https://api.spotify.com/v1/me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get user profile');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to get user profile:', error);
+    return null;
+  }
 };
 
 export const searchSpotifyTrack = async (
@@ -84,9 +136,15 @@ export const searchSpotifyTrack = async (
         },
       }
     );
+
+    if (!response.ok) {
+      throw new Error('Failed to search Spotify');
+    }
+
     const data = await response.json();
     const track = data.tracks?.items?.[0];
     if (!track) return null;
+
     return {
       id: track.id,
       name: track.name,
