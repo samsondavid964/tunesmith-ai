@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Music } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface SpotifyAuthProps {
   onAuthSuccess: (accessToken: string) => void;
@@ -34,23 +34,17 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
         setError(null);
         
         try {
-          // Exchange authorization code for access token via our Edge Function
-          const response = await fetch('/functions/v1/spotify-auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+          // Use Supabase Edge Function
+          const { data, error } = await supabase.functions.invoke('spotify-auth', {
+            body: {
               code: code,
               redirect_uri: SPOTIFY_REDIRECT_URI
-            })
+            }
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to exchange authorization code');
+          if (error) {
+            throw new Error(error.message || 'Failed to exchange authorization code');
           }
-
-          const data = await response.json();
           
           // Clear URL parameters
           window.history.replaceState({}, document.title, window.location.pathname);
