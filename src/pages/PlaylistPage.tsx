@@ -1,9 +1,10 @@
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { searchSpotifyTrack, SpotifyTrack, createSpotifyPlaylist } from '../services/spotifyService';
+import { ArrowLeft, Music, Play, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 
 const getSongAndArtist = (query: string) => {
-  // Try to split "Song by Artist" format
   const match = query.match(/^(.*?) by (.*)$/i);
   if (match) {
     return { song: match[1], artist: match[2] };
@@ -46,8 +47,7 @@ const PlaylistPage = () => {
       setLoading(false);
     };
     fetchTracks();
-    // eslint-disable-next-line
-  }, [playlist, accessToken]);
+  }, [playlist, accessToken, navigate]);
 
   const handleSaveToSpotify = async () => {
     if (!tracks || !accessToken) return;
@@ -79,85 +79,162 @@ const PlaylistPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#191414] via-[#232526] to-[#1DB954] flex flex-col items-center py-12 px-4">
-      <button
-        className="mb-8 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition self-start"
-        onClick={() => navigate('/')}
-      >
-        ← Back to Home
-      </button>
-      <div className="bg-[#181818] rounded-2xl shadow-2xl p-8 w-full max-w-2xl flex flex-col items-center">
-        {/* Playlist Cover */}
-        <div className="w-40 h-40 rounded-xl bg-gradient-to-tr from-[#1DB954] to-[#191414] flex items-center justify-center mb-6 shadow-lg">
-          <span className="text-6xl text-white/80">🎵</span>
-        </div>
-        {/* Playlist Title & Description */}
-        <h1 className="text-4xl font-extrabold text-white mb-2 text-center drop-shadow-lg">{playlist.title}</h1>
-        <p className="mb-8 text-gray-300 text-center text-lg max-w-xl">{playlist.description}</p>
-        {playlistUrl ? (
-          <a
-            href={playlistUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mb-8 px-6 py-3 bg-[#1DB954] text-white rounded-full font-bold text-lg shadow hover:bg-[#169c46] transition"
-          >
-            Open Playlist on Spotify
-          </a>
-        ) : (
+    <div className="min-h-screen bg-black text-white">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>
+      <div className="absolute top-20 right-20 w-72 h-72 bg-green-500/5 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-green-400/3 rounded-full blur-3xl"></div>
+      
+      <div className="relative z-10 min-h-screen px-6 py-8">
+        {/* Header */}
+        <div className="max-w-4xl mx-auto">
           <button
-            className="mb-8 px-6 py-3 bg-[#1DB954] text-white rounded-full font-bold text-lg shadow hover:bg-[#169c46] transition disabled:opacity-60"
-            onClick={handleSaveToSpotify}
-            disabled={saving || loading}
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
-            {saving ? 'Saving...' : 'Save to Spotify'}
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            Back to Home
           </button>
-        )}
-        {saveError && <div className="mb-4 text-red-400 font-semibold">{saveError}</div>}
-        {/* Track List */}
-        <div className="w-full">
-          <h2 className="text-2xl font-bold text-white mb-4">Tracks</h2>
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="w-12 h-12 border-4 border-[#1DB954] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {tracks?.map((track, idx) => (
-                <div
-                  key={track.id + idx}
-                  className="flex items-center bg-[#232526] rounded-lg shadow-md p-4 hover:bg-[#282828] transition group"
-                >
-                  <div className="w-14 h-14 rounded-md bg-gray-800 flex items-center justify-center mr-4 overflow-hidden">
-                    {track.albumArt ? (
-                      <img src={track.albumArt} alt={track.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl text-white/40">🎶</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-lg font-semibold text-white truncate">{track.name}</div>
-                    <div className="text-gray-400 text-sm truncate">{track.artist}</div>
-                  </div>
-                  {track.uri ? (
-                    <a
-                      href={`https://open.spotify.com/track/${track.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-4 px-3 py-1 bg-[#1DB954] text-white rounded-full font-medium text-sm shadow hover:bg-[#169c46] transition"
-                    >
-                      Play on Spotify
-                    </a>
-                  ) : (
-                    <span className="ml-4 px-3 py-1 bg-gray-700 text-gray-400 rounded-full font-medium text-sm">Not found</span>
-                  )}
+          
+          {/* Playlist Info */}
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-3xl p-8 mb-8">
+            <div className="flex items-start gap-6">
+              <div className="w-32 h-32 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0">
+                <Music className="w-12 h-12 text-black" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  {playlist.title}
+                </h1>
+                <p className="text-gray-400 text-lg mb-4 leading-relaxed">
+                  {playlist.description}
+                </p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span>{playlist.searchQueries?.length || 0} songs</span>
+                  <span>•</span>
+                  <span>Created by TuneSmith AI</span>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+            
+            {/* Action Button */}
+            <div className="mt-8 flex justify-center">
+              {playlistUrl ? (
+                <a
+                  href={playlistUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-green-500 hover:bg-green-600 text-black font-semibold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Open on Spotify
+                </a>
+              ) : (
+                <button
+                  onClick={handleSaveToSpotify}
+                  disabled={saving || loading}
+                  className="inline-flex items-center gap-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-black font-semibold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105 disabled:scale-100 shadow-xl"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Saving to Spotify...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5" />
+                      Save to Spotify
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            {/* Error Message */}
+            {saveError && (
+              <div className="mt-4 flex items-center justify-center gap-2 text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{saveError}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Track List */}
+          <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800 rounded-3xl p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Music className="w-6 h-6 text-green-500" />
+              Your Playlist
+            </h2>
+            
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-12 h-12 text-green-500 animate-spin mb-4" />
+                <p className="text-gray-400">Finding your perfect tracks...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {tracks?.map((track, idx) => (
+                  <div
+                    key={track.id + idx}
+                    className="flex items-center gap-4 p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-2xl transition-all duration-300 group"
+                  >
+                    {/* Track Number */}
+                    <div className="w-8 text-center text-gray-500 text-sm font-medium">
+                      {idx + 1}
+                    </div>
+                    
+                    {/* Album Art */}
+                    <div className="w-14 h-14 rounded-xl bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {track.albumArt ? (
+                        <img 
+                          src={track.albumArt} 
+                          alt={track.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <Music className="w-6 h-6 text-gray-500" />
+                      )}
+                    </div>
+                    
+                    {/* Track Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white truncate group-hover:text-green-400 transition-colors">
+                        {track.name}
+                      </h3>
+                      <p className="text-gray-400 text-sm truncate">
+                        {track.artist}
+                      </p>
+                    </div>
+                    
+                    {/* Action Button */}
+                    <div className="flex-shrink-0">
+                      {track.uri ? (
+                        <a
+                          href={`https://open.spotify.com/track/${track.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-black px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
+                        >
+                          <Play className="w-4 h-4" />
+                          Play
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 bg-gray-700 text-gray-500 px-4 py-2 rounded-full text-sm">
+                          <AlertCircle className="w-4 h-4" />
+                          Not found
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default PlaylistPage; 
+export default PlaylistPage;
