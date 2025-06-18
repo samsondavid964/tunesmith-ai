@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -7,28 +6,45 @@ interface SpotifyAuthProps {
   onAuthSuccess: (accessToken: string) => void;
 }
 
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI;
+const SPOTIFY_SCOPES = [
+  'playlist-modify-public',
+  'playlist-modify-private',
+  'user-read-private',
+  'user-read-email',
+  'user-library-read',
+  'user-library-modify',
+].join(' ');
+
+const getAccessTokenFromUrl = () => {
+  const hash = window.location.hash;
+  if (!hash) return null;
+  const params = new URLSearchParams(hash.substring(1));
+  return params.get('access_token');
+};
+
 const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleSpotifyLogin = async () => {
-    setIsConnecting(true);
-    
-    // For MVP, we'll simulate the authentication process
-    // In a real app, this would redirect to Spotify's OAuth flow
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock successful authentication
-      const mockToken = 'mock_spotify_access_token_' + Date.now();
-      onAuthSuccess(mockToken);
-      
-      console.log('Spotify authentication successful (simulated)');
-    } catch (error) {
-      console.error('Authentication failed:', error);
-    } finally {
-      setIsConnecting(false);
+  useEffect(() => {
+    const token = getAccessTokenFromUrl();
+    if (token) {
+      window.location.hash = '';
+      onAuthSuccess(token);
     }
+  }, [onAuthSuccess]);
+
+  const handleSpotifyLogin = () => {
+    setIsConnecting(true);
+    const authUrl =
+      `https://accounts.spotify.com/authorize?` +
+      `client_id=${SPOTIFY_CLIENT_ID}` +
+      `&response_type=token` +
+      `&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}` +
+      `&scope=${encodeURIComponent(SPOTIFY_SCOPES)}` +
+      `&show_dialog=true`;
+    window.location.href = authUrl;
   };
 
   return (

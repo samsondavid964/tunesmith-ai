@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Music, ExternalLink, RefreshCw } from 'lucide-react';
@@ -18,11 +17,10 @@ interface PlaylistResultProps {
     tracks: Track[];
   };
   onCreateNew: () => void;
-  onSaveToSpotify: () => void;
-  isSaving?: boolean;
+  playlistUrl?: string;
 }
 
-const PlaylistResult = ({ playlist, onCreateNew, onSaveToSpotify, isSaving = false }: PlaylistResultProps) => {
+const PlaylistResult = ({ playlist, onCreateNew, playlistUrl }: PlaylistResultProps) => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Playlist Header */}
@@ -41,14 +39,17 @@ const PlaylistResult = ({ playlist, onCreateNew, onSaveToSpotify, isSaving = fal
 
       {/* Action Buttons */}
       <div className="flex gap-4 justify-center">
-        <Button
-          onClick={onSaveToSpotify}
-          disabled={isSaving}
-          className="bg-spotify-green hover:bg-spotify-green/90 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:scale-105"
-        >
-          {isSaving ? 'Saving...' : 'Save to Spotify'}
-          <ExternalLink className="w-4 h-4 ml-2" />
-        </Button>
+        {playlistUrl && (
+          <a
+            href={playlistUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-spotify-green hover:bg-spotify-green/90 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:scale-105 flex items-center"
+          >
+            View on Spotify
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </a>
+        )}
         <Button
           onClick={onCreateNew}
           variant="outline"

@@ -1,4 +1,3 @@
-
 // Mock Spotify service for playlist creation
 // In a real implementation, this would use the Spotify Web API
 
@@ -15,6 +14,15 @@ interface CreatePlaylistResponse {
   playlistId?: string;
   playlistUrl?: string;
   error?: string;
+}
+
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  artist: string;
+  album: string;
+  albumArt: string;
+  uri: string;
 }
 
 export const createSpotifyPlaylist = async (
@@ -60,4 +68,34 @@ export const getUserProfile = async (accessToken: string) => {
     email: 'user@example.com',
     images: []
   };
+};
+
+export const searchSpotifyTrack = async (
+  accessToken: string,
+  query: string
+): Promise<SpotifyTrack | null> => {
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    const data = await response.json();
+    const track = data.tracks?.items?.[0];
+    if (!track) return null;
+    return {
+      id: track.id,
+      name: track.name,
+      artist: track.artists.map((a: any) => a.name).join(', '),
+      album: track.album.name,
+      albumArt: track.album.images?.[0]?.url || '',
+      uri: track.uri,
+    };
+  } catch (error) {
+    console.error('Spotify search error:', error);
+    return null;
+  }
 };

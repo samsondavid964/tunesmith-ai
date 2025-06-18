@@ -1,4 +1,3 @@
-
 // Mock AI service for generating playlist recommendations
 // In a real implementation, this would call OpenAI, Claude, or another AI service
 
@@ -34,20 +33,21 @@ const mockTracks: Track[] = [
   { id: '15', name: 'Therefore I Am', artist: 'Billie Eilish', album: 'Therefore I Am', duration: '2:54' }
 ];
 
-export const generatePlaylist = async (prompt: string): Promise<PlaylistRecommendation> => {
-  // Simulate AI processing time
-  await new Promise(resolve => setTimeout(resolve, 3000));
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
-  // Mock AI analysis of prompt
-  const playlistName = generatePlaylistName(prompt);
-  const description = generatePlaylistDescription(prompt);
-  const tracks = selectTracksBasedOnPrompt(prompt);
-
-  return {
-    name: playlistName,
-    description: description,
-    tracks: tracks
-  };
+export const generatePlaylist = async (prompt: string): Promise<any> => {
+  try {
+    const response = await fetch('http://localhost:5001/api/generate-playlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt })
+    });
+    return await response.json();
+  } catch (error) {
+    return { error: true, message: "Failed to generate playlist. Please try again." };
+  }
 };
 
 const generatePlaylistName = (prompt: string): string => {
