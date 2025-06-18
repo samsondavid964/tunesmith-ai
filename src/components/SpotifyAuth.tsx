@@ -17,35 +17,71 @@ const SPOTIFY_SCOPES = [
   'user-read-email',
 ].join(' ');
 
-const getAccessTokenFromUrl = () => {
-  const hash = window.location.hash;
-  if (!hash) return null;
-  const params = new URLSearchParams(hash.substring(1));
-  return params.get('access_token');
+const getAuthCodeFromUrl = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('code');
 };
 
 const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = getAccessTokenFromUrl();
-    if (token) {
-      window.location.hash = '';
-      onAuthSuccess(token);
-    }
+    const handleAuthCallback = async () => {
+      const code = getAuthCodeFromUrl();
+      if (code) {
+        setIsConnecting(true);
+        setError(null);
+        
+        try {
+          // Exchange authorization code for access token via our Edge Function
+          const response = await fetch('/functions/v1/spotify-auth', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              code: code,
+              redirect_uri: SPOTIFY_REDIRECT_URI
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to exchange authorization code');
+          }
+
+          const data = await response.json();
+          
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          onAuthSuccess(data.access_token);
+        } catch (error) {
+          console.error('Auth callback error:', error);
+          setError('Failed to complete Spotify authentication');
+        } finally {
+          setIsConnecting(false);
+        }
+      }
+    };
+
+    handleAuthCallback();
   }, [onAuthSuccess]);
 
   const handleSpotifyLogin = () => {
     if (!SPOTIFY_CLIENT_ID) {
-      console.error('Spotify Client ID not found. Please set VITE_SPOTIFY_CLIENT_ID in your environment variables.');
+      setError('Spotify Client ID not found. Please set VITE_SPOTIFY_CLIENT_ID in your environment variables.');
       return;
     }
 
     setIsConnecting(true);
+    setError(null);
+    
+    // Use Authorization Code Flow instead of Implicit Grant
     const authUrl =
       `https://accounts.spotify.com/authorize?` +
       `client_id=${SPOTIFY_CLIENT_ID}` +
-      `&response_type=token` +
+      `&response_type=code` + // Changed from 'token' to 'code'
       `&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}` +
       `&scope=${encodeURIComponent(SPOTIFY_SCOPES)}` +
       `&show_dialog=true`;
@@ -88,6 +124,12 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
               </>
             )}
           </Button>
+
+          {error && (
+            <p className="text-red-400 text-xs">
+              {error}
+            </p>
+          )}
 
           {!SPOTIFY_CLIENT_ID && (
             <p className="text-red-400 text-xs">
