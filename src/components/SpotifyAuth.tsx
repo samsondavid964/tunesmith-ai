@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Music } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface SpotifyAuthProps {
   onAuthSuccess: (accessToken: string) => void;
@@ -34,6 +34,13 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
         setError(null);
         
         try {
+          // Check if Supabase is configured
+          if (!isSupabaseConfigured()) {
+            throw new Error('Supabase is not configured. Please set up your environment variables.');
+          }
+
+          const supabase = getSupabaseClient();
+          
           // Use Supabase Edge Function
           const { data, error } = await supabase.functions.invoke('spotify-auth', {
             body: {
@@ -65,6 +72,11 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
   const handleSpotifyLogin = () => {
     if (!SPOTIFY_CLIENT_ID) {
       setError('Spotify Client ID not found. Please set VITE_SPOTIFY_CLIENT_ID in your environment variables.');
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      setError('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
       return;
     }
 
