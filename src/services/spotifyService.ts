@@ -1,3 +1,4 @@
+
 // Mock Spotify service for playlist creation
 // In a real implementation, this would use the Spotify Web API
 
@@ -29,7 +30,7 @@ export const createSpotifyPlaylist = async (
   accessToken: string,
   playlistName: string,
   description: string,
-  tracks: Track[]
+  trackUris: string[]
 ): Promise<CreatePlaylistResponse> => {
   try {
     // Simulate API call delay
@@ -42,7 +43,7 @@ export const createSpotifyPlaylist = async (
     console.log('Creating Spotify playlist:', {
       name: playlistName,
       description,
-      trackCount: tracks.length,
+      trackCount: trackUris.length,
       accessToken: accessToken.substring(0, 10) + '...'
     });
 
