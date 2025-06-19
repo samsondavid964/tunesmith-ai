@@ -21,8 +21,9 @@ services:
   - type: web
     name: tunesmithai-api
     env: node
+    runtime: node
     buildCommand: cd supabase/functions/spotify-auth && npm install
-    startCommand: node supabase/functions/spotify-auth/index.js
+    startCommand: cd supabase/functions/spotify-auth && node index.js
     envVars:
       - key: SPOTIFY_CLIENT_ID
         sync: false
