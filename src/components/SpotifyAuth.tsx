@@ -9,7 +9,7 @@ interface SpotifyAuthProps {
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const API_URL = import.meta.env.VITE_API_URL || 'https://tunesmithai-api.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://tunesmith-ai-api.onrender.com';
 // Ensure no trailing slash and use the current origin if not specified
 const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 
   `${window.location.protocol}//${window.location.host}`;
@@ -38,8 +38,19 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
         
         try {
           console.log('Exchanging code for token...', { code, redirect_uri: SPOTIFY_REDIRECT_URI });
+          console.log('API URL:', API_URL);
           
-          // Use your Render API instead of Supabase
+          // Test API connectivity first
+          const healthResponse = await fetch(`${API_URL}/health`, {
+            method: 'GET',
+          });
+          
+          if (!healthResponse.ok) {
+            throw new Error(`API not responding. Health check failed: ${healthResponse.status}`);
+          }
+          
+          console.log('API health check passed');
+          
           const response = await fetch(`${API_URL}/auth/spotify`, {
             method: 'POST',
             headers: {
@@ -66,7 +77,11 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
           onAuthSuccess(data.access_token);
         } catch (error) {
           console.error('Auth callback error:', error);
-          setError(`Failed to complete Spotify authentication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            setError(`Cannot connect to API server at ${API_URL}. Please check if the server is running.`);
+          } else {
+            setError(`Failed to complete Spotify authentication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
         } finally {
           setIsConnecting(false);
         }

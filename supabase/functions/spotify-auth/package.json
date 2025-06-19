@@ -1,16 +1,19 @@
+
 {
-  "name": "spotify-auth",
+  "name": "spotify-auth-api",
   "version": "1.0.0",
-  "description": "Spotify authentication service for TunesmithAI",
+  "description": "Spotify authentication API for TuneSmith AI",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.18.2",
+    "cors": "^2.8.5",
     "node-fetch": "^3.3.2",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
-} 
+}
