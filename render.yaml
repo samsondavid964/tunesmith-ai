@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tunesmithai-frontend
+    name: tunesmith-ai
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
@@ -12,7 +12,7 @@ services:
       - key: VITE_SPOTIFY_CLIENT_ID
         sync: false
       - key: VITE_API_URL
-        value: https://tunesmithai-api.onrender.com
+        value: https://tunesmith-ai-api.onrender.com
       - key: VITE_SPOTIFY_REDIRECT_URI
         value: https://tunesmith-ai.onrender.com
     routes:
@@ -21,11 +21,10 @@ services:
         destination: /index.html
 
   - type: web
-    name: tunesmithai-api
+    name: tunesmith-ai-api
     env: node
-    runtime: node
     buildCommand: cd supabase/functions/spotify-auth && npm install
-    startCommand: cd supabase/functions/spotify-auth && node index.js
+    startCommand: node supabase/functions/spotify-auth/index.js
     envVars:
       - key: SPOTIFY_CLIENT_ID
         sync: false
