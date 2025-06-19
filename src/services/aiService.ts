@@ -33,11 +33,11 @@ const mockTracks: Track[] = [
   { id: '15', name: 'Therefore I Am', artist: 'Billie Eilish', album: 'Therefore I Am', duration: '2:54' }
 ];
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const OPENAI_PROXY_URL = import.meta.env.VITE_OPENAI_PROXY_URL || 'https://tunesmith-ai-proxy.onrender.com/api/generate-playlist';
 
 export const generatePlaylist = async (prompt: string): Promise<any> => {
   try {
-    const response = await fetch('http://localhost:5001/api/generate-playlist', {
+    const response = await fetch(OPENAI_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
