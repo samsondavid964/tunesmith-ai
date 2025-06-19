@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,9 +9,8 @@ interface SpotifyAuthProps {
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-// Ensure no trailing slash and use the current origin if not specified
-const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 
-  `${window.location.protocol}//${window.location.host}`;
+// Use the exact Render.com URL
+const SPOTIFY_REDIRECT_URI = 'https://tunesmith-ai.onrender.com';
 const SPOTIFY_SCOPES = [
   'playlist-modify-public',
   'playlist-modify-private',

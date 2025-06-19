@@ -1,4 +1,0 @@
-express
-node-fetch
-cors
-dotenv 

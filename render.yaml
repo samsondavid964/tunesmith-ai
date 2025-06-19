@@ -13,6 +13,8 @@ services:
         sync: false
       - key: VITE_API_URL
         value: https://tunesmithai-api.onrender.com
+      - key: VITE_SPOTIFY_REDIRECT_URI
+        value: https://tunesmith-ai.onrender.com
     routes:
       - type: rewrite
         source: /*
@@ -29,5 +31,5 @@ services:
         sync: false
       - key: SPOTIFY_CLIENT_SECRET
         sync: false
-      - key: REDIRECT_URI
-        value: https://tunesmithai.onrender.com/callback 
+      - key: SPOTIFY_REDIRECT_URI
+        value: https://tunesmith-ai.onrender.com 
