@@ -31,4 +31,4 @@ services:
       - key: SPOTIFY_CLIENT_SECRET
         sync: false
       - key: SPOTIFY_REDIRECT_URI
-        value: https://tunesmith-ai.onrender.com 
+        value: https://tunesmith-ai.onrender.com

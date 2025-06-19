@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Music } from 'lucide-react';
-import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface SpotifyAuthProps {
   onAuthSuccess: (accessToken: string) => void;
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-// Use the exact Render.com URL
-const SPOTIFY_REDIRECT_URI = 'https://tunesmith-ai.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://tunesmith-ai-api.onrender.com';
+const SPOTIFY_REDIRECT_URI = import.meta.env.VITE_SPOTIFY_REDIRECT_URI || 
+  `${window.location.protocol}//${window.location.host}`;
 const SPOTIFY_SCOPES = [
   'playlist-modify-public',
   'playlist-modify-private',
@@ -35,32 +35,37 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
         setError(null);
         
         try {
-          // Check if Supabase is configured
-          if (!isSupabaseConfigured()) {
-            throw new Error('Supabase is not configured. Please set up your environment variables.');
+          // Health check
+          const healthResponse = await fetch(`${API_URL}/health`, { method: 'GET' });
+          if (!healthResponse.ok) {
+            throw new Error(`API not responding. Health check failed: ${healthResponse.status}`);
           }
-
-          const supabase = getSupabaseClient();
           
-          // Use Supabase Edge Function
-          const { data, error } = await supabase.functions.invoke('spotify-auth', {
-            body: {
+          const response = await fetch(`${API_URL}/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
               code: code,
               redirect_uri: SPOTIFY_REDIRECT_URI
-            }
+            })
           });
 
-          if (error) {
-            throw new Error(error.message || 'Failed to exchange authorization code');
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
           
-          // Clear URL parameters
+          const data = await response.json();
           window.history.replaceState({}, document.title, window.location.pathname);
-          
           onAuthSuccess(data.access_token);
         } catch (error) {
-          console.error('Auth callback error:', error);
-          setError('Failed to complete Spotify authentication');
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            setError(`Cannot connect to API server at ${API_URL}. Please check if the server is running.`);
+          } else {
+            setError(`Failed to complete Spotify authentication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
         } finally {
           setIsConnecting(false);
         }
@@ -76,28 +81,17 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
       return;
     }
 
-    if (!isSupabaseConfigured()) {
-      setError('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
-      return;
-    }
-
     setIsConnecting(true);
     setError(null);
     
-    // Debug: Log the redirect URI being used
-    console.log('Spotify Redirect URI:', SPOTIFY_REDIRECT_URI);
-    console.log('Current location:', window.location.href);
-    
-    // Use Authorization Code Flow instead of Implicit Grant
     const authUrl =
       `https://accounts.spotify.com/authorize?` +
       `client_id=${SPOTIFY_CLIENT_ID}` +
-      `&response_type=code` + // Changed from 'token' to 'code'
+      `&response_type=code` +
       `&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}` +
       `&scope=${encodeURIComponent(SPOTIFY_SCOPES)}` +
       `&show_dialog=true`;
     
-    console.log('Redirecting to Spotify auth:', authUrl);
     window.location.href = authUrl;
   };
 
@@ -153,6 +147,7 @@ const SpotifyAuth = ({ onAuthSuccess }: SpotifyAuthProps) => {
             <p>Debug Info:</p>
             <p>Redirect URI: {SPOTIFY_REDIRECT_URI}</p>
             <p>Current URL: {window.location.href}</p>
+            <p>API URL: {API_URL}</p>
           </div>
 
           <p className="text-xs text-gray-500">
